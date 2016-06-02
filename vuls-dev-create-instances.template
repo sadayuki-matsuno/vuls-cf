@@ -1,0 +1,181 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This is the cloudformation to create instaces for vuls",
+  "Parameters": {
+    "VPC" : {
+        "Description" : "Input VPC ID",
+        "Type": "AWS::EC2::VPC::Id"
+    },
+    "AZ" : {
+        "Description" : "Input Availability Zone",
+        "Type": "AWS::EC2::AvailabilityZone::Name",
+        "Default": "ap-northeast-1"
+    },
+    "Keyname": {
+        "Description" : "Input EC2 Keyname",
+        "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "VulsScanServerIP": {
+      "Description": "Input IP (not CIDR) of a Vuls Scan server that is permitted to access this servers by SSH. \n If you do not input this field, then skip creating security group for a vuls scan server",
+      "Default": "",
+      "MaxLength": 15,
+      "AllowedPattern" : "[0-9.]*",
+      "Type": "String"
+    },
+    "Purpose": {
+        "Description" : "Input Your Purpose for using this script",
+        "Type" : "String",
+        "Default" : "default",
+        "AllowedValues" : ["default", "unsecure"],
+        "Description" : "The Unsecure is for ci test. Do not select it for personal use."
+    }
+  },
+  "Mappings" : {
+    "DefaultSshUser" : {
+      "Amazon": { "Home" : "/home/ec2-user", "User" : "ec2-user" },
+      "Ubuntu": { "Home" : "/home/ubuntu", "User" : "ubuntu"},
+      "CentOS": { "Home" : "/home/centos", "User" : "centos"},
+      "Redhat": { "Home" : "/home/ec2-user", "User" : "ec2-user"}
+    }
+  },
+  "Conditions" : {
+    "CreateSSHSecurityGroup" : {"Fn::Not": [ {"Fn::Equals" : [{"Ref" : "VulsScanServerIP"}, ""]}]},
+    "AddSSHPublickey" : {"Fn::Equals" : [{"Ref" : "Purpose"}, "unsecure"]},
+    "FalseCondition" : {"Fn::Equals" : ["true", "false"]}
+  },
+  "Resources": {
+    "SecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Condition" : "CreateSSHSecurityGroup",
+      "Properties": {
+        "GroupDescription" : "This is for vuls dev. Enable to ssh servers from Vuls Scanner",
+        "SecurityGroupIngress" : [{
+          "CidrIp" : { "Fn::Join" : [ "",[ { "Ref" : "VulsScanServerIP" }, "/32" ] ] },
+          "IpProtocol" : "tcp",
+          "FromPort" : 22,
+          "ToPort" : 22
+        }],
+        "Tags" :  [{"Key" : "Name", "Value" : "vuls-dev-enable-vuls-scanner-to-ssh" }],
+        "VpcId" : { "Ref" : "VPC" }
+      }
+    },
+    "AmazonLinux2015091": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId":"ami-383c1956",
+        "AvailabilityZone": { "Ref" : "AZ" }, 
+        "InstanceType": "t2.micro",
+        "KeyName": { "Ref" : "Keyname" },
+        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
+          [ {"Ref" : "SecurityGroup"} ],
+          {"Ref" : "AWS::NoValue"}
+        ] },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#cloud-config","\n",
+          "repo_upgrade: none","\n",
+          "runcmd:", "\n",
+          { "Fn::If" : ["CreateSSHSecurityGroup",
+            { "Fn::Join" : [ "",[
+            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Amazon", "Home" ] }, "/.ssh/authorized_keys", "\n"
+            ] ] },
+            {"Ref" : "AWS::NoValue"}
+          ] },
+          "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
+        ] ] } },
+        "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-amz-201509" }]
+      }
+    },
+    "Redhat6": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId":"ami-53641e52",
+        "AvailabilityZone": { "Ref" : "AZ" }, 
+        "InstanceType": "t2.micro",
+        "KeyName": { "Ref" : "Keyname" },
+        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
+          [ {"Ref" : "SecurityGroup"} ],
+          {"Ref" : "AWS::NoValue"}
+        ] },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#cloud-config","\n",
+          "repo_upgrade: none","\n",
+          "runcmd:", "\n",
+          { "Fn::If" : ["CreateSSHSecurityGroup",
+            { "Fn::Join" : [ "",[
+            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Redhat", "Home" ] }, "/.ssh/authorized_keys", "\n"
+            ] ] },
+            {"Ref" : "AWS::NoValue"}
+          ] },
+          "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
+        ] ] } },
+        "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-rhel-6" }]
+      }
+    },
+    "CentOS6": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId":"ami-fa3d3f94",
+        "AvailabilityZone": { "Ref" : "AZ" }, 
+        "InstanceType": "t2.micro",
+        "KeyName": { "Ref" : "Keyname" },
+        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
+          [ {"Ref" : "SecurityGroup"} ],
+          {"Ref" : "AWS::NoValue"}
+        ] },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#cloud-config","\n",
+          "repo_upgrade: none","\n",
+          "runcmd:", "\n",
+          { "Fn::If" : ["CreateSSHSecurityGroup",
+            { "Fn::Join" : [ "",[
+            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "CentOS", "Home" ] }, "/.ssh/authorized_keys", "\n"
+            ] ] },
+            {"Ref" : "AWS::NoValue"}
+          ] },
+          "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
+        ] ] } },
+        "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-centos-6" }]
+      }
+    },
+    "Ubuntu1404": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId":"ami-0016a600",
+        "AvailabilityZone": { "Ref" : "AZ" }, 
+        "InstanceType": "t2.micro",
+        "KeyName": { "Ref" : "Keyname" },
+        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
+          [ {"Ref" : "SecurityGroup"} ],
+          {"Ref" : "AWS::NoValue"}
+        ] },
+        "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#cloud-config","\n",
+          "repo_upgrade: none","\n",
+          "runcmd:", "\n",
+          { "Fn::If" : ["CreateSSHSecurityGroup",
+            { "Fn::Join" : [ "",[
+            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Ubuntu", "Home" ] }, "/.ssh/authorized_keys", "\n"
+            ] ] },
+            {"Ref" : "AWS::NoValue"}
+          ] },
+          "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
+        ] ] } },
+        "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-ubuntu-1404" }]
+      }
+    }
+  },
+  "Outputs" : {
+    "AmazonPublicIP" : {
+      "Value" : { "Fn::GetAtt" : [ "AmazonLinux2015091", "PublicIp" ] }
+    },
+    "RedHatPublicIP" : {
+      "Value" : { "Fn::GetAtt" : [ "Redhat6", "PublicIp" ] }
+    },
+    "CentOSPublicIP" : {
+      "Value" : { "Fn::GetAtt" : [ "CentOS6", "PublicIp" ] }
+    },
+    "UbuntuPublicIP" : {
+      "Value" : { "Fn::GetAtt" : [ "Ubuntu1404", "PublicIp" ] }
+    }
+  }
+}
