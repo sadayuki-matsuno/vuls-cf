@@ -6,6 +6,11 @@ NOW IN PROGRESS.
 
 vuls_dev_compose can automatically setup vuls development environment.
 
+## DEPENDENCY
+
+- [jq](https://github.com/stedolan/jq)
+- awscli
+
 ## SETUP AWS
 
 - Create AWS account
@@ -90,6 +95,20 @@ vuls_dev_compose can automatically setup vuls development environment.
 
 - Create IAM user having the policy
 - Create Access key and store your local
+## SETUP LOCAL
+
+- install aws cli
+
+```
+$ brew insatll awscli
+```
+
+- clone this repo
+
+```
+$ git clone https://github.com/sadayuki-matsuno/vuls-cf.git
+```
+
 - Set env parameters as blow
 
 ```
@@ -106,18 +125,19 @@ export VULS_KEY_NAME=vuls-dev
 |VULS_AZ|Availability Zone to launch Instaces.|
 |VULS_KEY_NAME|Keyname to launch Instaces.|
 
-## SETUP LOCAL
 
-- install aws cli
+## USAGE
 
-```
-$ brew insatll awscli
-```
-
-- clone this repo
+- create compose
 
 ```
-$ git clone https://github.com/sadayuki-matsuno/vuls-cf.git
+$ sh vuls_dev_compose.sh create
+```
+
+- delete compose
+
+```
+$ sh vuls_dev_compose.sh delete
 ```
 
 # AUTHOR

@@ -127,7 +127,7 @@
         "AutoAssignElasticIps": "false",
         "AutoAssignPublicIps": "true",
         "CustomRecipes" : {
-          "Setup" : [ "vuls::setup", "vuls::go_cve_dictionary" ],
+          "Setup" : [ "vuls::setup" ],
           "Deploy" : [ "vuls::scan" ]
         },
         "CustomSecurityGroupIds" :  [ { "Ref": "SecurityGroup"} ],
