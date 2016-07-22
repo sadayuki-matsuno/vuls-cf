@@ -93,6 +93,9 @@ if [ $METHOD == "create" ]; then
   
   aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_OPSWORKS}
 
+  OPSWORKS_INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name vuls-dev-opsworks | jq -r ".Stacks[].Outputs[2].OutputValue")
+  VULS_SCANNER_IP=$(aws opsworks describe-instances --region us-east-1 --instance-ids ${OPSWORKS_INSTANCE_ID} | jq -r ".Instances[0].PublicIp")
+
   aws cloudformation create-stack \
      --stack-name vuls-dev-instances \
      --template-body "file:///${CURRENT_DIR}/vuls-dev-create-instances.template" \
@@ -101,10 +104,16 @@ if [ $METHOD == "create" ]; then
   	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} \
   	ParameterKey=AZ,ParameterValue=${VULS_AZ} \
   	ParameterKey=Keyname,ParameterValue=${VULS_KEY_NAME} \
-  	ParameterKey=VulsScanServerIP,ParameterValue="" \
+  	ParameterKey=VulsScanServerIP,ParameterValue=${VULS_SCANNER_IP} \
   	ParameterKey=Purpose,ParameterValue=unsecure
   
   aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_INSTTTANCES}
+
+  INSTANCES_IP=$(aws cloudformation describe-stacks --stack-name vuls-dev-instances)
+  AMAZON_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "AmazonPublicIP") | .OutputValue')
+  UBUNTU_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "UbuntuPublicIP") | .OutputValue')
+  CENTOS_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "CentOSPublicIP") | .OutputValue')
+  REDHAT_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "RedHatPublicIP") | .OutputValue')
 
   exit 0
  fi 
