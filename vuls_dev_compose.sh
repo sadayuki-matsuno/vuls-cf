@@ -8,18 +8,30 @@ set -e
 function help_arg() {
   cat <<- EOS
 
-sh vuls_dev_compose.sh [METHOD]
+sh vuls_dev_compose.sh [METHOD] [option]
   METHOD :
-      create
+      create [all/instances/scanner]
       delete
 
 EOS
   exit 1
 }
 
-[ $# -ne 1 ] && { echo "One argument is permitted"; help_arg; }
+[ $# -gt 0 ] && [ $# -lt 3 ] || { echo "One argument is permitted"; help_arg; }
 if [ $1 == "create" ]; then
-  METHOD=create
+  if [ $2 == "all" ]; then
+    METHOD=create
+    TARGET=all
+  elif [ $2 == "instances" ]; then
+    METHOD=create
+    TARGET=instances
+
+  elif [ $2 == "scanner" ]; then
+    METHOD=create
+    TARGET=scanner
+  else
+    echo "Wrong arguments supplied"; help_arg
+  fi
 elif [ $1 == "delete" ]; then
   METHOD=delete
 else
@@ -80,48 +92,59 @@ fi
 ######################################################
 # Create Instaces
 ######################################################
+echo $METHOD  $TARGET
 
 if [ $METHOD == "create" ]; then
 
-  aws cloudformation create-stack \
-     --stack-name vuls-dev-opsworks \
-     --template-body "file:///${CURRENT_DIR}/vuls-dev-create-opsworks.template" \
-     --region ${VULS_REGION} \
-     --capabilities CAPABILITY_IAM \
-     --parameters \
-  	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} 
+  if [ $TARGET == "all" ] || [ $TARGET == "scanner" ]; then
+    aws cloudformation create-stack \
+       --stack-name vuls-dev-opsworks \
+       --template-body "file:///${CURRENT_DIR}/vuls-dev-create-opsworks.template" \
+       --region ${VULS_REGION} \
+       --capabilities CAPABILITY_IAM \
+       --parameters \
+    	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} 
+    
+    aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_OPSWORKS}
+
+    OPSWORKS_INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name vuls-dev-opsworks | jq -r ".Stacks[].Outputs[2].OutputValue")
+    VULS_SCANNER_IP=$(aws opsworks describe-instances --region us-east-1 --instance-ids ${OPSWORKS_INSTANCE_ID} | jq -r ".Instances[0].PublicIp")
+  fi 
+
+  if [ $TARGET == "all" ] || [ $TARGET == "instances" ]; then
+    aws cloudformation create-stack \
+       --stack-name vuls-dev-instances \
+       --template-body "file:///${CURRENT_DIR}/vuls-dev-create-instances.template" \
+       --region ${VULS_REGION} \
+       --parameters \
+    	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} \
+    	ParameterKey=AZ,ParameterValue=${VULS_AZ} \
+    	ParameterKey=Keyname,ParameterValue=${VULS_KEY_NAME} \
+    	ParameterKey=VulsScanServerIP,ParameterValue=${VULS_SCANNER_IP} \
+    	ParameterKey=Purpose,ParameterValue=unsecure
+    
+    aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_INSTTTANCES}
   
-  aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_OPSWORKS}
-
-  OPSWORKS_INSTANCE_ID=$(aws cloudformation describe-stacks --stack-name vuls-dev-opsworks | jq -r ".Stacks[].Outputs[2].OutputValue")
-  VULS_SCANNER_IP=$(aws opsworks describe-instances --region us-east-1 --instance-ids ${OPSWORKS_INSTANCE_ID} | jq -r ".Instances[0].PublicIp")
-
-  aws cloudformation create-stack \
-     --stack-name vuls-dev-instances \
-     --template-body "file:///${CURRENT_DIR}/vuls-dev-create-instances.template" \
-     --region ${VULS_REGION} \
-     --parameters \
-  	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} \
-  	ParameterKey=AZ,ParameterValue=${VULS_AZ} \
-  	ParameterKey=Keyname,ParameterValue=${VULS_KEY_NAME} \
-  	ParameterKey=VulsScanServerIP,ParameterValue=${VULS_SCANNER_IP} \
-  	ParameterKey=Purpose,ParameterValue=unsecure
+    INSTANCES_IP=$(aws cloudformation describe-stacks --stack-name vuls-dev-instances)
+    AMAZON_IP=$(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "AmazonPublicIP") | .OutputValue')
+    UBUNTU_IP=$(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "UbuntuPublicIP") | .OutputValue')
+    CENTOS_IP=$(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "CentOSPublicIP") | .OutputValue')
+    REDHAT_IP=$(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "RedHatPublicIP") | .OutputValue')
   
-  aws cloudformation wait stack-create-complete --stack-name ${STACK_NAME_INSTTTANCES}
-
-  INSTANCES_IP=$(aws cloudformation describe-stacks --stack-name vuls-dev-instances)
-  AMAZON_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "AmazonPublicIP") | .OutputValue')
-  UBUNTU_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "UbuntuPublicIP") | .OutputValue')
-  CENTOS_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "CentOSPublicIP") | .OutputValue')
-  REDHAT_IP = $(echo $INSTANCES_IP | jq -r '.Stacks[].Outputs[] | select(.OutputKey == "RedHatPublicIP") | .OutputValue')
-
+    echo AMAZON_IP : $AMAZON_IP
+    echo UBUNTU_IP : $UBUNTU_IP
+    echo CENTOS_IP : $CENTOS_IP
+    echo REDHAT_IP : $REDHAT_IP
+  fi
   exit 0
  fi 
 
 
 if [ $METHOD == "delete" ]; then
   aws cloudformation delete-stack --stack-name ${STACK_NAME_OPSWORKS}
+  echo "deleting ${STACK_NAME_OPSWORKS}"
   aws cloudformation delete-stack --stack-name ${STACK_NAME_INSTTTANCES}
+  echo "deleting ${STACK_NAME_INSTTTANCES}"
   aws cloudformation wait stack-delete-complete --stack-name ${STACK_NAME_OPSWORKS}
   aws cloudformation wait stack-delete-complete --stack-name ${STACK_NAME_INSTTTANCES}
   echo "vuls cloudformation is all deleted successfully"
