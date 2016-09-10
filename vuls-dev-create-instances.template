@@ -90,7 +90,7 @@
       "Properties": {
         "ImageId":"ami-53641e52",
         "AvailabilityZone": { "Ref" : "AZ" }, 
-        "InstanceType": "t2.nano",
+        "InstanceType": "t2.micro",
         "KeyName": { "Ref" : "Keyname" },
         "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
           [ {"Ref" : "SecurityGroup"} ],
@@ -111,10 +111,10 @@
         "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-rhel-6" }]
       }
     },
-    "CentOS6": {
+    "CentOS7": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId":"ami-fa3d3f94",
+        "ImageId": "ami-eec1c380",
         "AvailabilityZone": { "Ref" : "AZ" }, 
         "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
@@ -172,7 +172,7 @@
       "Value" : { "Fn::GetAtt" : [ "Redhat6", "PublicIp" ] }
     },
     "CentOSPublicIP" : {
-      "Value" : { "Fn::GetAtt" : [ "CentOS6", "PublicIp" ] }
+      "Value" : { "Fn::GetAtt" : [ "CentOS7", "PublicIp" ] }
     },
     "UbuntuPublicIP" : {
       "Value" : { "Fn::GetAtt" : [ "Ubuntu1404", "PublicIp" ] }
