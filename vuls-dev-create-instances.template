@@ -64,7 +64,7 @@
       "Properties": {
         "ImageId":"ami-383c1956",
         "AvailabilityZone": { "Ref" : "AZ" }, 
-        "InstanceType": "t2.micro",
+        "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
         "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
           [ {"Ref" : "SecurityGroup"} ],
@@ -90,7 +90,7 @@
       "Properties": {
         "ImageId":"ami-53641e52",
         "AvailabilityZone": { "Ref" : "AZ" }, 
-        "InstanceType": "t2.micro",
+        "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
         "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
           [ {"Ref" : "SecurityGroup"} ],
@@ -116,7 +116,7 @@
       "Properties": {
         "ImageId":"ami-fa3d3f94",
         "AvailabilityZone": { "Ref" : "AZ" }, 
-        "InstanceType": "t2.micro",
+        "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
         "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
           [ {"Ref" : "SecurityGroup"} ],
@@ -142,7 +142,7 @@
       "Properties": {
         "ImageId":"ami-0016a600",
         "AvailabilityZone": { "Ref" : "AZ" }, 
-        "InstanceType": "t2.micro",
+        "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
         "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
           [ {"Ref" : "SecurityGroup"} ],
