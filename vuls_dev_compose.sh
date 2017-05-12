@@ -147,25 +147,25 @@ if [ $METHOD == "create" ]; then
     host        = "$AMAZON_IP"
     port        = "22"
     user        = "ec2-user"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
 
     [servers.ubuntu]
     host        = "$UBUNTU_IP"
     port        = "22"
     user        = "ubuntu"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
 
     [servers.centos]
     host        = "$CENTOS_IP"
     port        = "22"
     user        = "centos"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
 
     [servers.redhat]
     host        = "$REDHAT_IP"
     port        = "22"
     user        = "root"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
 EOS
 
 
