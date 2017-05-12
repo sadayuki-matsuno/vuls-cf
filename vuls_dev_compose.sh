@@ -161,7 +161,7 @@ if [ $METHOD == "create" ]; then
     user        = "centos"
     keyPath     = "/root/.ssh/$VULS_KEY_NAME"
 
-    [servers.amazon]
+    [servers.redhat]
     host        = "$REDHAT_IP"
     port        = "22"
     user        = "root"
