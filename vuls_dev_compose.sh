@@ -77,6 +77,9 @@ set blow parameters at your env
   VULS_PURPOSE:    default or unsecure (ex. default)
 
 EOS
+
+  aws ec2  describe-vpcs
+
   exit 1
 }
 
@@ -135,6 +138,37 @@ if [ $METHOD == "create" ]; then
     echo UBUNTU_IP : $UBUNTU_IP
     echo CENTOS_IP : $CENTOS_IP
     echo REDHAT_IP : $REDHAT_IP
+
+    cat << EOS > config.toml
+
+    [servers]
+
+    [servers.amazon]
+    host        = "$AMAZON_IP"
+    port        = "22"
+    user        = "ec2-user"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+
+    [servers.ubuntu]
+    host        = "$UBUNTU_IP"
+    port        = "22"
+    user        = "ubuntu"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+
+    [servers.centos]
+    host        = "$CENTOS_IP"
+    port        = "22"
+    user        = "centos"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+
+    [servers.amazon]
+    host        = "$REDHAT_IP"
+    port        = "22"
+    user        = "root"
+    keyPath     = "/root/.ssh/$VULS_KEY_NAME"
+EOS
+
+
   fi
   exit 0
  fi 
