@@ -15,6 +15,11 @@
         "Description" : "Input EC2 Keyname",
         "Type": "AWS::EC2::KeyPair::KeyName"
     },
+    "SecurityGroupID": {
+        "Description" : "Input SecurityGroup ID attaced to instances",
+        "Type" : "String",
+        "Default" : "",
+    },
     "VulsScanServerIP": {
       "Description": "Input IP (not CIDR) of a Vuls Scan server that is permitted to access this servers by SSH. \n If you do not input this field, then skip creating security group for a vuls scan server",
       "Default": "",
@@ -66,10 +71,7 @@
         "AvailabilityZone": { "Ref" : "AZ" }, 
         "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
-        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
-          [ {"Ref" : "SecurityGroup"} ],
-          {"Ref" : "AWS::NoValue"}
-        ] },
+        "SecurityGroupIds": [{ "Ref" : "SecurityGroupID" }],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
@@ -92,10 +94,7 @@
         "AvailabilityZone": { "Ref" : "AZ" }, 
         "InstanceType": "t2.micro",
         "KeyName": { "Ref" : "Keyname" },
-        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
-          [ {"Ref" : "SecurityGroup"} ],
-          {"Ref" : "AWS::NoValue"}
-        ] },
+        "SecurityGroupIds": [{ "Ref" : "SecurityGroupID" }],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
@@ -118,10 +117,7 @@
         "AvailabilityZone": { "Ref" : "AZ" }, 
         "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
-        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
-          [ {"Ref" : "SecurityGroup"} ],
-          {"Ref" : "AWS::NoValue"}
-        ] },
+        "SecurityGroupIds": [{ "Ref" : "SecurityGroupID" }],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
@@ -144,10 +140,7 @@
         "AvailabilityZone": { "Ref" : "AZ" }, 
         "InstanceType": "t2.nano",
         "KeyName": { "Ref" : "Keyname" },
-        "SecurityGroupIds": { "Fn::If" : ["CreateSSHSecurityGroup",
-          [ {"Ref" : "SecurityGroup"} ],
-          {"Ref" : "AWS::NoValue"}
-        ] },
+        "SecurityGroupIds": [{ "Ref" : "SecurityGroupID" }],
         "UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#cloud-config","\n",
           "repo_upgrade: none","\n",

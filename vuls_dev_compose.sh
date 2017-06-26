@@ -73,12 +73,18 @@ set blow parameters at your env
   VULS_VPC_ID:     vpc id (ex. vpc-11111111)
   VULS_REGION:     region (ex. ap-northeast-1)
   VULS_AZ:         availability zone (ex. ap-northeast-1a)
+  VULS_SG_ID:      security group id (ex. sg-xxxxxx)
   VULS_KEY_NAME:   ssh key name (ex. vuls-dev)
   VULS_PURPOSE:    default or unsecure (ex. default)
 
 EOS
 
-  aws ec2  describe-vpcs
+  echo "-------------------VPC--------------------------"
+  aws ec2  describe-vpcs | jq '.Vpcs | map({VpcId, CidrBlock, Tags}) '
+  echo "--------------Security Group--------------------"
+  aws ec2 describe-security-groups | jq ".SecurityGroups | map({Key: .GroupName , Value: .GroupId}) | from_entries"
+  echo "-----------------Key Name-----------------------"
+  aws ec2 describe-key-pairs | jq '.KeyPairs | map({KeyName})'
 
   exit 1
 }
@@ -87,6 +93,7 @@ if [ $METHOD == "create" ]; then
   [ -z "$VULS_VPC_ID" ] && { echo "Need to set VULS_VPC_ID"; help_param; }
   [ -z "$VULS_REGION" ] && { echo "Need to set VULS_REGION"; help_param; }
   [ -z "$VULS_AZ" ] && { echo "Need to set VULS_AZ"; help_param; }
+  [ -z "$VULS_SG_ID" ] && { echo "Need to set VULS_SG_ID"; help_param; }
   [ -z "$VULS_KEY_NAME" ] && { echo "Need to set VULS_KEY_NAME"; help_param; }
   [ -z "$VULS_PURPOSE" ] && { echo "Need to set VULS_PURPOSE"; help_param; }
 fi
@@ -122,6 +129,7 @@ if [ $METHOD == "create" ]; then
        --parameters \
     	ParameterKey=VPC,ParameterValue=${VULS_VPC_ID} \
     	ParameterKey=AZ,ParameterValue=${VULS_AZ} \
+    	ParameterKey=SecurityGroupID,ParameterValue=${VULS_SG_ID} \
     	ParameterKey=Keyname,ParameterValue=${VULS_KEY_NAME} \
     	ParameterKey=VulsScanServerIP,ParameterValue=${VULS_SCANNER_IP} \
     	ParameterKey=Purpose,ParameterValue=unsecure
@@ -141,31 +149,28 @@ if [ $METHOD == "create" ]; then
 
     cat << EOS > config.toml
 
-    [servers]
+[default]
+user        = "ec2-user"
+port        = "22"
+keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
 
-    [servers.amazon]
-    host        = "$AMAZON_IP"
-    port        = "22"
-    user        = "ec2-user"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
+[servers]
 
-    [servers.ubuntu]
-    host        = "$UBUNTU_IP"
-    port        = "22"
-    user        = "ubuntu"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
+[servers.amazon]
+host        = "$AMAZON_IP"
+user        = "ec2-user"
 
-    [servers.centos]
-    host        = "$CENTOS_IP"
-    port        = "22"
-    user        = "centos"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
+[servers.ubuntu]
+host        = "$UBUNTU_IP"
+user        = "ubuntu"
 
-    [servers.redhat]
-    host        = "$REDHAT_IP"
-    port        = "22"
-    user        = "root"
-    keyPath     = "/root/.ssh/$VULS_KEY_NAME.pem"
+[servers.centos]
+host        = "$CENTOS_IP"
+user        = "centos"
+
+[servers.redhat]
+host        = "$REDHAT_IP"
+user        = "ec2-user"
 EOS
 
 

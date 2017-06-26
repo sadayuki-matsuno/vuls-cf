@@ -124,6 +124,7 @@ export VULS_KEY_NAME=vuls-dev
 |VULS_REGION|Region to launch Instaces.|
 |VULS_AZ|Availability Zone to launch Instaces.|
 |VULS_KEY_NAME|Keyname to launch Instaces.|
+|VULS_SG_ID|Security Group to launch Instaces.|
 
 
 ## USAGE
@@ -131,7 +132,7 @@ export VULS_KEY_NAME=vuls-dev
 - create compose
 
 ```
-$ sh vuls_dev_compose.sh create
+$ sh vuls_dev_compose.sh create instances
 ```
 
 - delete compose
