@@ -27,13 +27,6 @@
       "AllowedPattern" : "[0-9.]*",
       "Type": "String"
     },
-    "Purpose": {
-        "Description" : "Input Your Purpose for using this script",
-        "Type" : "String",
-        "Default" : "default",
-        "AllowedValues" : ["default", "unsecure"],
-        "Description" : "The Unsecure is for ci test. Do not select it for personal use."
-    }
   },
   "Mappings" : {
     "DefaultSshUser" : {
@@ -45,7 +38,6 @@
   },
   "Conditions" : {
     "CreateSSHSecurityGroup" : {"Fn::Not": [ {"Fn::Equals" : [{"Ref" : "VulsScanServerIP"}, ""]}]},
-    "AddSSHPublickey" : {"Fn::Equals" : [{"Ref" : "Purpose"}, "unsecure"]},
     "FalseCondition" : {"Fn::Equals" : ["true", "false"]}
   },
   "Resources": {
@@ -76,12 +68,6 @@
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
           "runcmd:", "\n",
-          { "Fn::If" : ["CreateSSHSecurityGroup",
-            { "Fn::Join" : [ "",[
-            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Amazon", "Home" ] }, "/.ssh/authorized_keys", "\n"
-            ] ] },
-            {"Ref" : "AWS::NoValue"}
-          ] },
           "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
         ] ] } },
         "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-amz-201509" }]
@@ -99,12 +85,6 @@
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
           "runcmd:", "\n",
-          { "Fn::If" : ["CreateSSHSecurityGroup",
-            { "Fn::Join" : [ "",[
-            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Redhat", "Home" ] }, "/.ssh/authorized_keys", "\n"
-            ] ] },
-            {"Ref" : "AWS::NoValue"}
-          ] },
           "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
         ] ] } },
         "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-rhel-6" }]
@@ -122,12 +102,6 @@
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
           "runcmd:", "\n",
-          { "Fn::If" : ["CreateSSHSecurityGroup",
-            { "Fn::Join" : [ "",[
-            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "CentOS", "Home" ] }, "/.ssh/authorized_keys", "\n"
-            ] ] },
-            {"Ref" : "AWS::NoValue"}
-          ] },
           "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
         ] ] } },
         "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-centos-6" }]
@@ -145,12 +119,6 @@
           "#cloud-config","\n",
           "repo_upgrade: none","\n",
           "runcmd:", "\n",
-          { "Fn::If" : ["CreateSSHSecurityGroup",
-            { "Fn::Join" : [ "",[
-            "  -  curl -vs  http://", { "Ref" : "VulsScanServerIP" }, ":1414 2>&1 >> ", { "Fn::FindInMap" : [ "DefaultSshUser", "Ubuntu", "Home" ] }, "/.ssh/authorized_keys", "\n"
-            ] ] },
-            {"Ref" : "AWS::NoValue"}
-          ] },
           "  - echo $? > /tmp/cloudformation_userdata_status.log", "\n"
         ] ] } },
         "Tags" : [{"Key" : "Name", "Value" : "vuls-dev-ubuntu-1404" }]
